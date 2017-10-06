@@ -20,7 +20,7 @@ ctx = cnvs.getContext("2d")
 
 var gameover = false
 var score = 0;
-var gridSize = 8;
+var gridSize = 32;
 var apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
 
 var snake = {
@@ -82,7 +82,7 @@ setInterval(function(){
 		}
 		snake.body.unshift({x: snake.body[0].x + (snake.body[1].x - snake.body[0].x) , y: snake.body[0].y + (snake.body[1].y - snake.body[0].y)}) 
 	}
-}, 150);
+}, 75);
 
 document.addEventListener("keydown", function(e){
 	if (e.keyCode == 39 && snake.dir.x != -1){	//right
