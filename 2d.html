@@ -1,0 +1,100 @@
+<html>
+<head>
+<style>
+html, body {
+	margin: 0;
+}
+
+canvas {
+	background-color: black;
+}
+</style>
+</head>
+
+<body>
+<canvas id="cnvs"></canvas>
+<script>
+cnvs = document.getElementById("cnvs")
+cnvs.width = cnvs.height = Math.min(innerWidth, innerHeight)
+ctx = cnvs.getContext("2d")
+
+var gameover = false
+var score = 0;
+var gridSize = 8;
+var apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+
+var snake = {
+	body: [
+		{x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+	],
+	dir: {x: 1, y: 0}
+}
+
+snake.body.unshift({x: snake.body[snake.body.length-1].x - 1, y: snake.body[0].y})
+snake.body.unshift({x: snake.body[snake.body.length-1].x - 2, y: snake.body[0].y})
+
+ctx.textAlign = "center"
+
+setInterval(function(){
+	if (gameover) return
+	ctx.clearRect(0, 0, cnvs.width, cnvs.height)
+	for (var s = 0; s < snake.body.length ; s++){
+		ctx.fillStyle = "white"
+		ctx.fillRect((cnvs.width / gridSize) * snake.body[s].x, (cnvs.height / gridSize) * snake.body[s].y, cnvs.width / gridSize, cnvs.height / gridSize)
+	}
+	ctx.fillStyle = "red"
+	ctx.fillRect((cnvs.width / gridSize) * apple.x, (cnvs.height / gridSize) * apple.y, cnvs.width / gridSize, cnvs.height / gridSize)
+	ctx.font = "40px monospace"
+	ctx.fillText(score.toString(), 20, 40)
+	
+	//add head onto snake
+	nextPos = {x: snake.body[snake.body.length-1].x + snake.dir.x, y: snake.body[snake.body.length-1].y + snake.dir.y}
+	
+	for (var s = 0; s < snake.body.length; s++){
+		if (snake.body[s].x == nextPos.x && snake.body[s].y == nextPos.y){		
+			ctx.font = "100px monospace"
+			ctx.fillText("gameover", cnvs.width/2, cnvs.height/2 + 10)
+			gameover = true
+			return
+		}
+	}
+	
+	snake.body.push(nextPos)
+	//remove tail of snake
+	snake.body.splice(0, 1)
+	
+	snake.body = snake.body.map(function(i){
+		return {x: (i.x + gridSize) % gridSize, y: (i.y + gridSize) % gridSize}
+	})
+	
+	if (nextPos.x == apple.x && nextPos.y == apple.y){
+		score++
+		apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+		appleInSnake = true
+		while (appleInSnake){
+			apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+			appleInSnake = false
+			snake.body.forEach(function(s){
+				if (s.x == apple.x && s.y == apple.y){
+					appleInSnake = true
+				}
+			})
+		}
+		snake.body.unshift({x: snake.body[0].x + (snake.body[1].x - snake.body[0].x) , y: snake.body[0].y + (snake.body[1].y - snake.body[0].y)}) 
+	}
+}, 150);
+
+document.addEventListener("keydown", function(e){
+	if (e.keyCode == 39 && snake.dir.x != -1){	//right
+		snake.dir = {x: 1, y: 0}
+	} else if (e.keyCode == 37 && snake.dir.x != 1){	//left
+		snake.dir = {x: -1, y: 0}
+	} else if (e.keyCode == 40 && snake.dir.y != -1){	//down
+		snake.dir = {x: 0, y: 1}
+	} else if (e.keyCode == 38 && snake.dir.y != 1){
+		snake.dir = {x: 0, y: -1}
+	}
+})
+</script>
+</body>
+</html>
