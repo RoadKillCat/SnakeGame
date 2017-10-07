@@ -33,7 +33,7 @@ var snake = {
 	dir: {x: 1, y: 0, z: 0}
 }
 
-for (var s = 0; s < 3; s++){
+for (var s = 0; s < gridSize-2; s++){
 	snake.body.unshift({x: snake.body[snake.body.length-1].x - (s+1), y: snake.body[0].y, z: snake.body[0].z})
 }
 
@@ -70,6 +70,7 @@ setInterval(function(){
 	ctx.fillText("0 and 1 on num pad for vertical", 20, 90)
 	ctx.fillText("g for wireframe", 20, 110)
 	ctx.fillText("t for 3d snake movement", 20, 130)
+	ctx.fillText("+ and - to change gridsize", 20, 150)
 	
 	//add head onto snake
 	nextPos = {x: snake.body[snake.body.length-1].x + snake.dir.x, y: snake.body[snake.body.length-1].y + snake.dir.y, z: snake.body[snake.body.length-1].z + snake.dir.z}
