@@ -3,12 +3,13 @@
 <style>
 html, body {
 	margin: 0;
-}
+}	
 
 canvas {
 	background-color: black;
 }
 </style>
+<script src="thirdEngine.js"></script>
 </head>
 
 <body>
@@ -18,9 +19,10 @@ cnvs = document.getElementById("cnvs")
 cnvs.width = cnvs.height = Math.min(innerWidth, innerHeight)
 ctx = cnvs.getContext("2d")
 
+var wireframe = true
 var gameover = false
 var score = 0;
-var gridSize = 16;
+var gridSize = 20;
 var apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
 
 var snake = {
@@ -33,19 +35,29 @@ var snake = {
 snake.body.unshift({x: snake.body[snake.body.length-1].x - 1, y: snake.body[0].y})
 snake.body.unshift({x: snake.body[snake.body.length-1].x - 2, y: snake.body[0].y})
 
-ctx.textAlign = "center"
-
 setInterval(function(){
 	if (gameover) return
-	ctx.clearRect(0, 0, cnvs.width, cnvs.height)
+	var world = []
+	
+	if (wireframe) world.push({verts: [{x: 0, y: 1, z: 0}, {x: gridSize, y: 1, z: 0}, {x: gridSize, y: gridSize+1, z: 0}, {x: 0, y: gridSize+1, z:0}], col: "blue"})
+	
 	for (var s = 0; s < snake.body.length ; s++){
-		ctx.fillStyle = "white"
-		ctx.fillRect((cnvs.width / gridSize) * snake.body[s].x, (cnvs.height / gridSize) * snake.body[s].y, cnvs.width / gridSize, cnvs.height / gridSize)
+		world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, 0, 1, "white"))
+		//ctx.fillStyle = "white"
+		//ctx.fillRect((cnvs.width / gridSize) * snake.body[s].x, (cnvs.height / gridSize) * snake.body[s].y, cnvs.width / gridSize, cnvs.height / gridSize)
 	}
+	world = world.concat(cube(apple.x, gridSize - apple.y, 0, 1, "red"))
+	
+	render(world, {x: gridSize/2, y: -gridSize/2, z: 15, yaw: 0, pitch: -20, roll: 0, fov: 90}, cnvs, wireframe)
+
+	//ctx.fillRect((cnvs.width / gridSize) * apple.x, (cnvs.height / gridSize) * apple.y, cnvs.width / gridSize, cnvs.height / gridSize)
+	ctx.textAlign = "left"
 	ctx.fillStyle = "red"
-	ctx.fillRect((cnvs.width / gridSize) * apple.x, (cnvs.height / gridSize) * apple.y, cnvs.width / gridSize, cnvs.height / gridSize)
 	ctx.font = "40px monospace"
 	ctx.fillText(score.toString(), 20, 40)
+	ctx.font = "15px monospace"
+	ctx.fillText("arrow keys to move", 20, 70)
+	ctx.fillText("g for wireframe", 20, 90)
 	
 	//add head onto snake
 	nextPos = {x: snake.body[snake.body.length-1].x + snake.dir.x, y: snake.body[snake.body.length-1].y + snake.dir.y}
@@ -82,7 +94,7 @@ setInterval(function(){
 		}
 		snake.body.unshift({x: snake.body[0].x + (snake.body[1].x - snake.body[0].x) , y: snake.body[0].y + (snake.body[1].y - snake.body[0].y)}) 
 	}
-}, 150);
+}, 100);
 
 document.addEventListener("keydown", function(e){
 	if (e.keyCode == 39 && snake.dir.x != -1){	//right
@@ -94,7 +106,20 @@ document.addEventListener("keydown", function(e){
 	} else if (e.keyCode == 38 && snake.dir.y != 1){
 		snake.dir = {x: 0, y: -1}
 	}
+	if (e.keyCode == 71) wireframe = !wireframe //g toggle wireframe
 })
+
+function cube(x, y, z, sz, col){
+	return [
+	{verts: [{x: x, y: y, z: z}, {x: x+sz, y: y, z: z}, {x: x+sz, y: y+sz, z: z}, {x: x, y: y+sz, z: z}], col: col},
+	{verts: [{x: x, y: y, z: z}, {x: x+sz, y: y, z: z}, {x: x+sz, y: y, z: z+sz}, {x: x, y: y, z: z+sz}], col: col},
+	{verts: [{x: x+sz, y: y, z: z}, {x: x+sz, y: y+sz, z: z}, {x: x+sz, y: y+sz, z: z+sz}, {x: x+sz, y: y, z: z+sz}], col: col},
+	{verts: [{x: x+sz, y: y+sz, z: z}, {x: x, y: y+sz, z: z}, {x: x, y: y+sz, z: z+sz}, {x: x+sz, y: y+sz, z: z+sz}], col: col},
+	{verts: [{x: x, y: y+sz, z: z}, {x: x, y: y, z: z}, {x: x, y: y, z: z+sz}, {x: x, y: y+sz, z: z+sz}], col: col},
+	{verts: [{x: x, y: y, z: z+sz}, {x: x+sz, y: y, z: z+sz}, {x: x+sz, y: y+sz, z: z+sz}, {x: x, y: y+sz, z: z+sz}], col: col}
+	]
+}
+
 </script>
 </body>
 </html>
