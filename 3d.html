@@ -19,51 +19,63 @@ cnvs = document.getElementById("cnvs")
 cnvs.width = cnvs.height = Math.min(innerWidth, innerHeight)
 ctx = cnvs.getContext("2d")
 
+var threeDimensions = false
 var wireframe = true
 var gameover = false
 var score = 0;
-var gridSize = 20;
-var apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+var gridSize = 12;
+var apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
 
 var snake = {
 	body: [
-		{x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+		{x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
 	],
-	dir: {x: 1, y: 0}
+	dir: {x: 1, y: 0, z: 0}
 }
 
-snake.body.unshift({x: snake.body[snake.body.length-1].x - 1, y: snake.body[0].y})
-snake.body.unshift({x: snake.body[snake.body.length-1].x - 2, y: snake.body[0].y})
+for (var s = 0; s < 3; s++){
+	snake.body.unshift({x: snake.body[snake.body.length-1].x - (s+1), y: snake.body[0].y, z: snake.body[0].z})
+}
 
 setInterval(function(){
 	if (gameover) return
 	var world = []
 	
-	if (wireframe) world.push({verts: [{x: 0, y: 1, z: 0}, {x: gridSize, y: 1, z: 0}, {x: gridSize, y: gridSize+1, z: 0}, {x: 0, y: gridSize+1, z:0}], col: "blue"})
+	if (wireframe){
+		if (threeDimensions){
+			world = world.concat(cube(0,0,0,gridSize,"pink"))
+		} else {
+			world.push({verts: [{x: 0, y: 1, z: 0}, {x: gridSize, y: 1, z: 0}, {x: gridSize, y: gridSize+1, z: 0}, {x: 0, y: gridSize+1, z:0}], col: "blue"})
+		}
+	}
 	
 	for (var s = 0; s < snake.body.length ; s++){
-		world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, 0, 1, "white"))
-		//ctx.fillStyle = "white"
-		//ctx.fillRect((cnvs.width / gridSize) * snake.body[s].x, (cnvs.height / gridSize) * snake.body[s].y, cnvs.width / gridSize, cnvs.height / gridSize)
+		if (threeDimensions){
+			world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, snake.body[s].z, 1, "white"))
+		} else {
+			world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, 0, 1, "white"))
+		}
 	}
-	world = world.concat(cube(apple.x, gridSize - apple.y, 0, 1, "red"))
 	
-	render(world, {x: gridSize/2, y: -gridSize/2, z: 15, yaw: 0, pitch: -20, roll: 0, fov: 90}, cnvs, wireframe)
+	world = world.concat(cube(apple.x, gridSize - apple.y, apple.z, 1, "red"))
+	
+	render(world, {x: gridSize/2, y: -gridSize/1.5, z: gridSize+2, yaw: 0, pitch: -30, roll: 0, fov: 90}, cnvs, wireframe)
 
-	//ctx.fillRect((cnvs.width / gridSize) * apple.x, (cnvs.height / gridSize) * apple.y, cnvs.width / gridSize, cnvs.height / gridSize)
 	ctx.textAlign = "left"
 	ctx.fillStyle = "red"
 	ctx.font = "40px monospace"
 	ctx.fillText(score.toString(), 20, 40)
 	ctx.font = "15px monospace"
-	ctx.fillText("arrow keys to move", 20, 70)
-	ctx.fillText("g for wireframe", 20, 90)
+	ctx.fillText("arrow keys for horizontal", 20, 70)
+	ctx.fillText("0 and 1 on num pad for vertical", 20, 90)
+	ctx.fillText("g for wireframe", 20, 110)
+	ctx.fillText("t for 3d snake movement", 20, 130)
 	
 	//add head onto snake
-	nextPos = {x: snake.body[snake.body.length-1].x + snake.dir.x, y: snake.body[snake.body.length-1].y + snake.dir.y}
+	nextPos = {x: snake.body[snake.body.length-1].x + snake.dir.x, y: snake.body[snake.body.length-1].y + snake.dir.y, z: snake.body[snake.body.length-1].z + snake.dir.z}
 	
 	for (var s = 0; s < snake.body.length; s++){
-		if (snake.body[s].x == nextPos.x && snake.body[s].y == nextPos.y){		
+		if (snake.body[s].x == nextPos.x && snake.body[s].y == nextPos.y && snake.body[s].z == nextPos.z){
 			ctx.font = "100px monospace"
 			ctx.fillText("gameover", cnvs.width/2, cnvs.height/2 + 10)
 			gameover = true
@@ -76,37 +88,56 @@ setInterval(function(){
 	snake.body.splice(0, 1)
 	
 	snake.body = snake.body.map(function(i){
-		return {x: (i.x + gridSize) % gridSize, y: (i.y + gridSize) % gridSize}
+		return {x: (i.x + gridSize) % gridSize, y: (i.y + gridSize) % gridSize, z: (i.z + gridSize) % gridSize}
 	})
 	
-	if (nextPos.x == apple.x && nextPos.y == apple.y){
+	if (nextPos.x == apple.x && nextPos.y == apple.y && nextPos.z == apple.z){
 		score++
-		apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+		if (threeDimensions){
+			apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: parseInt(Math.random() * gridSize)}
+		} else {
+			apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
+		}
 		appleInSnake = true
 		while (appleInSnake){
-			apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+			if (threeDimensions){
+				apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: parseInt(Math.random() * gridSize)}
+			} else {
+				apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
+			}
 			appleInSnake = false
 			snake.body.forEach(function(s){
-				if (s.x == apple.x && s.y == apple.y){
+				if (s.x == apple.x && s.y == apple.y && s.z == apple.z){
 					appleInSnake = true
 				}
 			})
 		}
 		snake.body.unshift({x: snake.body[0].x + (snake.body[1].x - snake.body[0].x) , y: snake.body[0].y + (snake.body[1].y - snake.body[0].y)}) 
 	}
-}, 100);
+}, 150);
 
 document.addEventListener("keydown", function(e){
-	if (e.keyCode == 39 && snake.dir.x != -1){	//right
-		snake.dir = {x: 1, y: 0}
+	if (e.keyCode == 39 && snake.dir.x != -1){			//right
+		snake.dir = {x: 1, y: 0, z: 0}
 	} else if (e.keyCode == 37 && snake.dir.x != 1){	//left
-		snake.dir = {x: -1, y: 0}
-	} else if (e.keyCode == 40 && snake.dir.y != -1){	//down
-		snake.dir = {x: 0, y: 1}
-	} else if (e.keyCode == 38 && snake.dir.y != 1){
-		snake.dir = {x: 0, y: -1}
+		snake.dir = {x: -1, y: 0, z: 0}
+	} else if (e.keyCode == 40 && snake.dir.y != -1){	//backwards
+		snake.dir = {x: 0, y: 1, z: 0}
+	} else if (e.keyCode == 38 && snake.dir.y != 1){	//forward
+		snake.dir = {x: 0, y: -1, z: 0}
+	} else if (e.keyCode == 97 && snake.dir.z != -1 && threeDimensions){	//up
+		snake.dir = {x: 0, y: 0, z: 1}
+	} else if (e.keyCode == 96 && snake.dir.z != 1 && threeDimensions){	//down
+		snake.dir = {x: 0, y: 0, z: -1}
+	} else if (e.keyCode == 71){ 						//g toggle wireframe
+		wireframe = !wireframe
+	} else if (e.keyCode == 84){						//t toggle 2d
+		threeDimensions = !threeDimensions
+	} else if (e.keyCode == 187){						//+
+		gridSize += 2
+	} else if (e.keyCode == 189){						//-
+		gridSize -= 2
 	}
-	if (e.keyCode == 71) wireframe = !wireframe //g toggle wireframe
 })
 
 function cube(x, y, z, sz, col){
