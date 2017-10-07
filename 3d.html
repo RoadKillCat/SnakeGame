@@ -33,7 +33,7 @@ var snake = {
 	dir: {x: 1, y: 0, z: 0}
 }
 
-for (var s = 0; s < gridSize-2; s++){
+for (var s = 0; s < 4; s++){
 	snake.body.unshift({x: snake.body[snake.body.length-1].x - (s+1), y: snake.body[0].y, z: snake.body[0].z})
 }
 
@@ -44,8 +44,14 @@ setInterval(function(){
 	if (wireframe){
 		if (threeDimensions){
 			world = world.concat(cube(0,0,0,gridSize,"pink"))
+			for (var r = 0; r < gridSize; r++){
+				world.push({verts: [{x: 0, y: r, z: 0}, {x: gridSize, y: r, z: 0}], col: "pink"})
+			}
+			for (var c = 0; c < gridSize; c++){
+				world.push({verts: [{x: c, y: 0, z: 0}, {x: c, y: gridSize, z: 0}], col: "pink"})
+			}
 		} else {
-			world.push({verts: [{x: 0, y: 1, z: 0}, {x: gridSize, y: 1, z: 0}, {x: gridSize, y: gridSize+1, z: 0}, {x: 0, y: gridSize+1, z:0}], col: "blue"})
+			world.push({verts: [{x: 0, y: 1, z: 0}, {x: gridSize, y: 1, z: 0}, {x: gridSize, y: gridSize+1, z: 0}, {x: 0, y: gridSize+1, z:0}], col: "pink"})
 		}
 	}
 	
