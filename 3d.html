@@ -93,6 +93,7 @@ setInterval(function(){
 	snake.body.push(nextPos)
 	//remove tail of snake
 	snake.body.splice(0, 1)
+	turned = false
 	
 	snake.body = snake.body.map(function(i){
 		return {x: (i.x + gridSize) % gridSize, y: (i.y + gridSize) % gridSize, z: (i.z + gridSize) % gridSize}
@@ -124,18 +125,25 @@ setInterval(function(){
 }, 150);
 
 document.addEventListener("keydown", function(e){
+	if (turned) return
 	if (e.keyCode == 39 && snake.dir.x != -1){			//right
 		snake.dir = {x: 1, y: 0, z: 0}
+		turned = true
 	} else if (e.keyCode == 37 && snake.dir.x != 1){	//left
 		snake.dir = {x: -1, y: 0, z: 0}
+		turned = true
 	} else if (e.keyCode == 40 && snake.dir.y != -1){	//backwards
 		snake.dir = {x: 0, y: 1, z: 0}
+		turned = true
 	} else if (e.keyCode == 38 && snake.dir.y != 1){	//forward
 		snake.dir = {x: 0, y: -1, z: 0}
+		turned = true
 	} else if (e.keyCode == 97 && snake.dir.z != -1 && threeDimensions){	//up
 		snake.dir = {x: 0, y: 0, z: 1}
+		turned = true
 	} else if (e.keyCode == 96 && snake.dir.z != 1 && threeDimensions){	//down
 		snake.dir = {x: 0, y: 0, z: -1}
+		turned = true
 	} else if (e.keyCode == 71){ 						//g toggle wireframe
 		wireframe = !wireframe
 	} else if (e.keyCode == 84){						//t toggle 2d
