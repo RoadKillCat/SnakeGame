@@ -14,20 +14,24 @@ canvas {
 <body>
 <canvas id="cnvs"></canvas>
 <script>
+//get canvas and resize to biggest square
 cnvs = document.getElementById("cnvs")
 cnvs.width = cnvs.height = Math.min(innerWidth, innerHeight)
 ctx = cnvs.getContext("2d")
 
+//define variables
 var gameover = false
 var score = 0;
 var gridSize = 8;
 var apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
 var tail = 0
-var head = 3
+var head = 7
 var snake = new Array(64)
 var dir = {x: 1, y: 0}
 
-snake[0] = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+//randomly generate the tal of the snake
+snake[tail] = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
+//add the snake to the right up to the head
 for (var s = tail + 1; s < head; s++){
 	snake[s] = {x: snake[s-1].x + dir.x, y: snake[s-1].y + dir.y}
 }
@@ -40,61 +44,70 @@ function colourSquare(x, y, col){
 }
 
 setInterval(function(){
+	//if gameover exit function
 	if (gameover) return
+	
+	//update snake head and pointers
 	snake[head%64] = {x: snake[(head-1)%64].x + dir.x, y: snake[(head-1)%64].y + dir.y}
 	head++
 	tail++
-	//console.log(tail - head)
-	ctx.clearRect(0, 0, cnvs.width, cnvs.height)
+	
+	//wrap the snake on the screen
 	for (var s = tail; s < head; s++){
-		colourSquare(snake[s%64].x, snake[s%64].y, "white")
+		snake[s%64].x = (snake[s%64].x + 8) % 8
+		snake[s%64].y = (snake[s%64].y + 8) % 8
 	}
-	colourSquare(apple.x, apple.y, "red")
-	ctx.font = "40px monospace"
-	ctx.fillText(score.toString(), 20, 40)
 	
 	//check for death
 	for (var s = tail; s < head-1; s++){
-		if (snake[s%64].x == snake[head-1].x && snake[s%64].y == snake[head-1].y){		
+		if (snake[s%64].x == snake[(head-1)%64].x && snake[s%64].y == snake[(head-1)%64].y){		
 			ctx.font = "100px monospace"
+			ctx.fillStyle = "red"
 			ctx.fillText("gameover", cnvs.width/2, cnvs.height/2 + 10)
 			gameover = true
 			return
 		}
 	}
 	
-	snake.body = snake.body.map(function(i){
-		return {x: (i.x + gridSize) % gridSize, y: (i.y + gridSize) % gridSize}
-	})
-	
-	if (nextPos.x == apple.x && nextPos.y == apple.y){
-		score++
+	//check for apple munch
+	if (snake[(head-1)%64].x == apple.x && snake[(head-1)%64].y == apple.y){
+		//randomly move apple location
 		apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
-		appleInSnake = true
-		while (appleInSnake){
-			apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize)}
-			appleInSnake = false
-			snake.body.forEach(function(s){
-				if (s.x == apple.x && s.y == apple.y){
-					appleInSnake = true
-				}
-			})
-		}
-		snake.body.unshift({x: snake.body[0].x + (snake.body[1].x - snake.body[0].x) , y: snake.body[0].y + (snake.body[1].y - snake.body[0].y)}) 
+		//increment score
+		score++
+		//decrement tail pointer
+		tail--
+		//move head forward
+		snake[tail%64] = {x: snake[(tail+1)%64].x + (snake[(tail+2)%64].x - snake[(tail+1)%64].x), y: snake[(tail+1)%64].y + (snake[(tail+2)%64].y - snake[(tail+1)%64].y)}		
 	}
-}, 150);
+	
+	//clear screen
+	ctx.clearRect(0, 0, cnvs.width, cnvs.height)
+
+	//draw apple and score
+	colourSquare(apple.x, apple.y, "red")
+	ctx.font = "40px monospace"
+	ctx.fillText(score.toString(), 20, 40)
+
+	//draw snake
+	for (var s = tail; s < head; s++){
+		colourSquare(snake[s%64].x, snake[s%64].y, "white")
+	}
+
+}, 200);
 
 document.addEventListener("keydown", function(e){
-	if (e.keyCode == 39 && snake.dir.x != -1){	//right
-		snake.dir = {x: 1, y: 0}
-	} else if (e.keyCode == 37 && snake.dir.x != 1){	//left
-		snake.dir = {x: -1, y: 0}
-	} else if (e.keyCode == 40 && snake.dir.y != -1){	//down
-		snake.dir = {x: 0, y: 1}
-	} else if (e.keyCode == 38 && snake.dir.y != 1){
-		snake.dir = {x: 0, y: -1}
+	if (e.keyCode == 39 && dir.x != -1){		//right
+		dir = {x: 1, y: 0}
+	} else if (e.keyCode == 37 && dir.x != 1){	//left
+		dir = {x: -1, y: 0}
+	} else if (e.keyCode == 40 && dir.y != -1){	//down
+		dir = {x: 0, y: 1}
+	} else if (e.keyCode == 38 && dir.y != 1){  //up
+		dir = {x: 0, y: -1}
 	}
 })
+
 </script>
 </body>
 </html>
