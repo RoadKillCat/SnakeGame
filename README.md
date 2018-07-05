@@ -9,4 +9,4 @@ I wrote this very simple code so we would all be on the same page when translati
 
 In addition, I also threw the same logic into [my 3d JS Engine (`zengine.js`)](https://github.com/joeiddon/zengine) because why not?
 
-Oh and the file `2dCircular.html` will play identically to `2d.html` but internally uses a circular buffer to store the snake as this isa neat implementation detail that I wanted us to use in the real thing.
+Oh and the file `2dCircular.html` will play identically to `2d.html` but internally uses a circular buffer to store the snake as this is cleaner to implement in `C` (for the real thing).
