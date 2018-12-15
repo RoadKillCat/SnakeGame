@@ -2,168 +2,172 @@
 <head>
 <style>
 html, body {
-	margin: 0;
-}	
+    margin: 0;
+}
 
 canvas {
-	background-color: black;
+    background-color: black;
 }
 </style>
-<script src="http://joeiddon.me/3dSimulationVR/thirdEngine.js"></script>
+<script src="https://git.io/zengine.js"></script>
 </head>
 
 <body>
 <canvas id="cnvs"></canvas>
 <script>
+/**
+WARNING!
+This code is absolutely terrible!
+I wrote it in a rush without any thought, it is completely unstructured.
+I hope to come back to this and tidy it up at some point.
+**/
 cnvs = document.getElementById("cnvs")
 cnvs.width = cnvs.height = Math.min(innerWidth, innerHeight)
 ctx = cnvs.getContext("2d")
 
 var threeDimensions = false
-var wireframe = true
+var wireframe = false
 var gameover = false
 var score = 0;
 var gridSize = 12;
 var apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
 
 var snake = {
-	body: [
-		{x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
-	],
-	dir: {x: 1, y: 0, z: 0}
+    body: [
+        {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
+    ],
+    dir: {x: 1, y: 0, z: 0}
 }
 
 for (var s = 0; s < 4; s++){
-	snake.body.unshift({x: snake.body[snake.body.length-1].x - (s+1), y: snake.body[0].y, z: snake.body[0].z})
+    snake.body.unshift({x: snake.body[snake.body.length-1].x - (s+1), y: snake.body[0].y, z: snake.body[0].z})
 }
 
 setInterval(function(){
-	if (gameover) return
-	var world = []
-	
-	if (wireframe){
-		if (threeDimensions){
-			world = world.concat(cube(0,0,0,gridSize,"pink"))
-			for (var r = 0; r < gridSize; r++){
-				world.push({verts: [{x: 0, y: r, z: 0}, {x: gridSize, y: r, z: 0}], col: "pink"})
-			}
-			for (var c = 0; c < gridSize; c++){
-				world.push({verts: [{x: c, y: 0, z: 0}, {x: c, y: gridSize, z: 0}], col: "pink"})
-			}
-		} else {
-			world.push({verts: [{x: 0, y: 1, z: 0}, {x: gridSize, y: 1, z: 0}, {x: gridSize, y: gridSize+1, z: 0}, {x: 0, y: gridSize+1, z:0}], col: "pink"})
-		}
-	}
-	
-	for (var s = 0; s < snake.body.length ; s++){
-		if (threeDimensions){
-			world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, snake.body[s].z, 1, "white"))
-		} else {
-			world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, 0, 1, "white"))
-		}
-	}
-	
-	world = world.concat(cube(apple.x, gridSize - apple.y, apple.z, 1, "red"))
-	
-	render(world, {x: gridSize/2, y: -gridSize/1.5, z: gridSize+2, yaw: 0, pitch: -30, roll: 0, fov: 90}, cnvs, wireframe)
+    if (gameover) return
+    var world = []
+    if (wireframe){
+        if (threeDimensions){
+            world = world.concat(cube(0,0,0,gridSize,"pink"))
+            for (var r = 0; r < gridSize; r++){
+                world.push({verts: [{x: 0, y: r, z: 0}, {x: gridSize, y: r, z: 0}], col: "pink"})
+            }
+            for (var c = 0; c < gridSize; c++){
+                world.push({verts: [{x: c, y: 0, z: 0}, {x: c, y: gridSize, z: 0}], col: "pink"})
+            }
+        } else {
+            world.push({verts: [{x: 0, y: 1, z: 0}, {x: gridSize, y: 1, z: 0}, {x: gridSize, y: gridSize+1, z: 0}, {x: 0, y: gridSize+1, z:0}], col: "pink"})
+        }
+    }
 
-	ctx.textAlign = "left"
-	ctx.fillStyle = "red"
-	ctx.font = "40px monospace"
-	ctx.fillText(score.toString(), 20, 40)
-	ctx.font = "15px monospace"
-	ctx.fillText("arrow keys for horizontal", 20, 70)
-	ctx.fillText("0 and 1 on num pad for vertical", 20, 90)
-	ctx.fillText("g for wireframe", 20, 110)
-	ctx.fillText("t for 3d snake movement", 20, 130)
-	ctx.fillText("+ and - to change gridsize", 20, 150)
-	
-	//add head onto snake
-	nextPos = {x: snake.body[snake.body.length-1].x + snake.dir.x, y: snake.body[snake.body.length-1].y + snake.dir.y, z: snake.body[snake.body.length-1].z + snake.dir.z}
-	
-	for (var s = 0; s < snake.body.length; s++){
-		if (snake.body[s].x == nextPos.x && snake.body[s].y == nextPos.y && snake.body[s].z == nextPos.z){
-			ctx.font = "100px monospace"
-			ctx.fillText("gameover", cnvs.width/2, cnvs.height/2 + 10)
-			gameover = true
-			return
-		}
-	}
-	
-	snake.body.push(nextPos)
-	//remove tail of snake
-	snake.body.splice(0, 1)
-	turned = false
-	
-	snake.body = snake.body.map(function(i){
-		return {x: (i.x + gridSize) % gridSize, y: (i.y + gridSize) % gridSize, z: (i.z + gridSize) % gridSize}
-	})
-	
-	if (nextPos.x == apple.x && nextPos.y == apple.y && nextPos.z == apple.z){
-		score++
-		if (threeDimensions){
-			apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: parseInt(Math.random() * gridSize)}
-		} else {
-			apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
-		}
-		appleInSnake = true
-		while (appleInSnake){
-			if (threeDimensions){
-				apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: parseInt(Math.random() * gridSize)}
-			} else {
-				apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
-			}
-			appleInSnake = false
-			snake.body.forEach(function(s){
-				if (s.x == apple.x && s.y == apple.y && s.z == apple.z){
-					appleInSnake = true
-				}
-			})
-		}
-		snake.body.unshift({x: snake.body[0].x + (snake.body[1].x - snake.body[0].x) , y: snake.body[0].y + (snake.body[1].y - snake.body[0].y)}) 
-	}
+    for (var s = 0; s < snake.body.length ; s++){
+        if (threeDimensions){
+            world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, snake.body[s].z, 1, "white"))
+        } else {
+            world = world.concat(cube(snake.body[s].x, gridSize - snake.body[s].y, 0, 1, "white"))
+        }
+    }
+    world = world.concat(cube(apple.x, gridSize - apple.y, apple.z, 1, "red"))
+
+    zengine.render(world, {x: gridSize/2, y: -gridSize/1.5, z: gridSize+2, yaw: 0, pitch: -30, roll: 0, fov: 90}, cnvs, wireframe)
+
+    ctx.textAlign = "left"
+    ctx.fillStyle = "red"
+    ctx.font = "40px monospace"
+    ctx.fillText(score.toString(), 20, 40)
+    ctx.font = "15px monospace"
+    ctx.fillText("WASD for horizontal", 20, 70)
+    ctx.fillText("Z and X for vertical", 20, 90)
+    ctx.fillText("f for wireframe", 20, 110)
+    ctx.fillText("t for 3d snake movement", 20, 130)
+    ctx.fillText("+ and - to change gridsize", 20, 150)
+
+    //add head onto snake
+    nextPos = {x: snake.body[snake.body.length-1].x + snake.dir.x, y: snake.body[snake.body.length-1].y + snake.dir.y, z: snake.body[snake.body.length-1].z + snake.dir.z}
+
+    for (var s = 0; s < snake.body.length; s++){
+        if (snake.body[s].x == nextPos.x && snake.body[s].y == nextPos.y && snake.body[s].z == nextPos.z){
+            ctx.font = "100px monospace"
+            ctx.fillText("gameover", cnvs.width/2, cnvs.height/2 + 10)
+            gameover = true
+            return
+        }
+    }
+
+    snake.body.push(nextPos)
+    //remove tail of snake
+    snake.body.splice(0, 1)
+    turned = false
+
+    snake.body = snake.body.map(function(i){
+        return {x: (i.x + gridSize) % gridSize, y: (i.y + gridSize) % gridSize, z: (i.z + gridSize) % gridSize}
+    })
+
+    if (nextPos.x == apple.x && nextPos.y == apple.y && nextPos.z == apple.z){
+        score++
+        if (threeDimensions){
+            apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: parseInt(Math.random() * gridSize)}
+        } else {
+            apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
+        }
+        appleInSnake = true
+        while (appleInSnake){
+            if (threeDimensions){
+                apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: parseInt(Math.random() * gridSize)}
+            } else {
+                apple = {x: parseInt(Math.random() * gridSize), y: parseInt(Math.random() * gridSize), z: 0}
+            }
+            appleInSnake = false
+            snake.body.forEach(function(s){
+                if (s.x == apple.x && s.y == apple.y && s.z == apple.z){
+                    appleInSnake = true
+                }
+            })
+        }
+        snake.body.unshift({x: snake.body[0].x + (snake.body[1].x - snake.body[0].x) , y: snake.body[0].y + (snake.body[1].y - snake.body[0].y)}) 
+    }
 }, 150);
 
 document.addEventListener("keydown", function(e){
-	if (turned) return
-	if (e.keyCode == 39 && snake.dir.x != -1){			//right
-		snake.dir = {x: 1, y: 0, z: 0}
-		turned = true
-	} else if (e.keyCode == 37 && snake.dir.x != 1){	//left
-		snake.dir = {x: -1, y: 0, z: 0}
-		turned = true
-	} else if (e.keyCode == 40 && snake.dir.y != -1){	//backwards
-		snake.dir = {x: 0, y: 1, z: 0}
-		turned = true
-	} else if (e.keyCode == 38 && snake.dir.y != 1){	//forward
-		snake.dir = {x: 0, y: -1, z: 0}
-		turned = true
-	} else if (e.keyCode == 97 && snake.dir.z != -1 && threeDimensions){	//up
-		snake.dir = {x: 0, y: 0, z: 1}
-		turned = true
-	} else if (e.keyCode == 96 && snake.dir.z != 1 && threeDimensions){	//down
-		snake.dir = {x: 0, y: 0, z: -1}
-		turned = true
-	} else if (e.keyCode == 71){ 						//g toggle wireframe
-		wireframe = !wireframe
-	} else if (e.keyCode == 84){						//t toggle 2d
-		threeDimensions = !threeDimensions
-	} else if (e.keyCode == 187){						//+
-		gridSize += 2
-	} else if (e.keyCode == 189){						//-
-		gridSize -= 2
-	}
+    if (turned) return
+    if (e.key == 'd' && snake.dir.x != -1){            //right
+        snake.dir = {x: 1, y: 0, z: 0}
+        turned = true
+    } else if (e.key == 'a' && snake.dir.x != 1){    //left
+        snake.dir = {x: -1, y: 0, z: 0}
+        turned = true
+    } else if (e.key == 's' && snake.dir.y != -1){     //backwards
+        snake.dir = {x: 0, y: 1, z: 0}
+        turned = true
+    } else if (e.key == 'w' && snake.dir.y != 1){    //forward
+        snake.dir = {x: 0, y: -1, z: 0}
+        turned = true
+    } else if (e.key == 'z' && snake.dir.z != -1 && threeDimensions){  //up
+        snake.dir = {x: 0, y: 0, z: 1}
+        turned = true
+    } else if (e.key == 'x' && snake.dir.z != 1 && threeDimensions){   //down
+        snake.dir = {x: 0, y: 0, z: -1}
+        turned = true
+    } else if (e.key == 'f'){                      //f toggle wireframe
+        wireframe = !wireframe
+    } else if (e.key == 't'){                      //t toggle 2d
+        threeDimensions = !threeDimensions
+    } else if (e.key == '+'){                       //+
+        gridSize += 2
+    } else if (e.key == '-'){                       //-
+        gridSize -= 2
+    }
 })
 
 function cube(x, y, z, sz, col){
-	return [
-	{verts: [{x: x, y: y, z: z}, {x: x+sz, y: y, z: z}, {x: x+sz, y: y+sz, z: z}, {x: x, y: y+sz, z: z}], col: col},
-	{verts: [{x: x, y: y, z: z}, {x: x+sz, y: y, z: z}, {x: x+sz, y: y, z: z+sz}, {x: x, y: y, z: z+sz}], col: col},
-	{verts: [{x: x+sz, y: y, z: z}, {x: x+sz, y: y+sz, z: z}, {x: x+sz, y: y+sz, z: z+sz}, {x: x+sz, y: y, z: z+sz}], col: col},
-	{verts: [{x: x+sz, y: y+sz, z: z}, {x: x, y: y+sz, z: z}, {x: x, y: y+sz, z: z+sz}, {x: x+sz, y: y+sz, z: z+sz}], col: col},
-	{verts: [{x: x, y: y+sz, z: z}, {x: x, y: y, z: z}, {x: x, y: y, z: z+sz}, {x: x, y: y+sz, z: z+sz}], col: col},
-	{verts: [{x: x, y: y, z: z+sz}, {x: x+sz, y: y, z: z+sz}, {x: x+sz, y: y+sz, z: z+sz}, {x: x, y: y+sz, z: z+sz}], col: col}
-	]
+    return [
+    {verts: [{x: x, y: y, z: z}, {x: x+sz, y: y, z: z}, {x: x+sz, y: y+sz, z: z}, {x: x, y: y+sz, z: z}], col: col},
+    {verts: [{x: x, y: y, z: z}, {x: x+sz, y: y, z: z}, {x: x+sz, y: y, z: z+sz}, {x: x, y: y, z: z+sz}], col: col},
+    {verts: [{x: x+sz, y: y, z: z}, {x: x+sz, y: y+sz, z: z}, {x: x+sz, y: y+sz, z: z+sz}, {x: x+sz, y: y, z: z+sz}], col: col},
+    {verts: [{x: x+sz, y: y+sz, z: z}, {x: x, y: y+sz, z: z}, {x: x, y: y+sz, z: z+sz}, {x: x+sz, y: y+sz, z: z+sz}], col: col},
+    {verts: [{x: x, y: y+sz, z: z}, {x: x, y: y, z: z}, {x: x, y: y, z: z+sz}, {x: x, y: y+sz, z: z+sz}], col: col},
+    {verts: [{x: x, y: y, z: z+sz}, {x: x+sz, y: y, z: z+sz}, {x: x+sz, y: y+sz, z: z+sz}, {x: x, y: y+sz, z: z+sz}], col: col}
+    ]
 }
 
 </script>
